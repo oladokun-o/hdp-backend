@@ -2,15 +2,11 @@
 const mysql = require('mysql');
 
 const connection = mysql.createConnection({
-  // host: "server266.web-hosting.com",
-  // port: 5522,
-  // user: "shopjqoi",
-  // password: "NobqsqrEJ8rh",
-  // database: "shopjqoi_shopping platform",
-  host: "localhost",
+  host: "www.heavydutypub.com",
   port: 3306,
-  user: "root",
-  database: "shopjqoi_shopping platform"
+  user: "heavydu2_developer",
+  password: "d#8CLnR9bD8ihL3",
+  database: "heavydu2_orders",
 });
 
 connection.connect(function(err) {
