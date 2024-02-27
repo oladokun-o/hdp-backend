@@ -28,7 +28,8 @@ router.post("/orders/new", async function (req, res, next) {
           product_id: r.product_id,
           name: r.name,
           qty: r.qty,
-          amount: r.amount
+          amount: r.amount,
+          price: r.price
       }
   }),
   order = {

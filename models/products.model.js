@@ -19,9 +19,9 @@ let model = {
           }
 
           const orderId = result.insertId;
-          const productValues = products.map(product => [orderId, product.product_id, product.name, product.qty, product.amount]);
+          const productValues = products.map(product => [orderId, product.product_id, product.name, product.qty, product.amount, product.price]);
 
-          connection.query("INSERT INTO products (order_id, product_id, name, qty, amount) VALUES ?", [productValues], (err) => {
+          connection.query("INSERT INTO products (order_id, product_id, name, qty, amount, price) VALUES ?", [productValues], (err) => {
             if (err) {
               connection.rollback(() => {
                 reject(err);
