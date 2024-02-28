@@ -16,8 +16,6 @@ app.use(cors());
 require(db);
 
 const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
-const authRouter = require('./routes/auth');
 const adminRouter = require('./routes/admin');
 
 
@@ -32,8 +30,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api', indexRouter);
-app.use('/api/users', usersRouter);
-app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
 
 // catch 404 and forward to error handler

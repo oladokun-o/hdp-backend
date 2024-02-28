@@ -65,9 +65,9 @@ const model = {
         }
 
         connection.query(
-          "DELETE FROM orders WHERE id = ?",
+          "DELETE FROM products WHERE order_id = ?",
           orderId,
-          (err, result) => {
+          (err) => {
             if (err) {
               connection.rollback(() => {
                 reject(err);
@@ -76,7 +76,7 @@ const model = {
             }
 
             connection.query(
-              "DELETE FROM products WHERE order_id = ?",
+              "DELETE FROM orders WHERE order_id = ?",
               orderId,
               (err) => {
                 if (err) {
@@ -113,7 +113,7 @@ const model = {
         }
         // Now fetch products for each order
         const ordersWithProducts = orders.map(async (order) => {
-          const products = await OrderModel.getProductsByOrderId(order.id);
+          const products = await model.getProductsByOrderId(order.order_id);
           return { ...order, products };
         });
         Promise.all(ordersWithProducts)
@@ -136,7 +136,7 @@ const model = {
   },
   updateOrder: (orderId, updatedOrder) => {
     return new Promise((resolve, reject) => {
-      const query = "UPDATE orders SET ... WHERE id = ?"; // Update the query based on your database schema
+      const query = "UPDATE orders SET ... WHERE order_id = ?"; // Update the query based on your database schema
       db.query(query, [updatedOrder, orderId], (error, result) => {
         if (error) {
           reject(error);
@@ -148,7 +148,7 @@ const model = {
   },
   updateOrderStatus: (orderId, newStatus) => {
     return new Promise((resolve, reject) => {
-      const query = "UPDATE orders SET status = ? WHERE id = ?";
+      const query = "UPDATE orders SET status = ? WHERE order_id = ?";
       db.query(query, [newStatus, orderId], (error, result) => {
         if (error) {
           reject(error);
