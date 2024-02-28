@@ -1,6 +1,6 @@
 const db = require("../config/db");
 
-let model = {
+const model = {
   createOrder: (order, products) => {
     return new Promise((resolve, reject) => {
       let connection = db;
@@ -19,17 +19,19 @@ let model = {
           }
 
           const orderId = result.insertId;
-          const productValues = products.map(product => [orderId, product.product_id, product.name, product.qty, product.amount, product.price]);
+          const productValues = products.map((product) => [
+            orderId,
+            product.product_id,
+            product.name,
+            product.qty,
+            product.amount,
+            product.price,
+          ]);
 
-          connection.query("INSERT INTO products (order_id, product_id, name, qty, amount, price) VALUES ?", [productValues], (err) => {
-            if (err) {
-              connection.rollback(() => {
-                reject(err);
-              });
-              return;
-            }
-
-            connection.commit((err) => {
+          connection.query(
+            "INSERT INTO products (order_id, product_id, name, qty, amount, price) VALUES ?",
+            [productValues],
+            (err) => {
               if (err) {
                 connection.rollback(() => {
                   reject(err);
@@ -37,9 +39,18 @@ let model = {
                 return;
               }
 
-              resolve(orderId);
-            });
-          });
+              connection.commit((err) => {
+                if (err) {
+                  connection.rollback(() => {
+                    reject(err);
+                  });
+                  return;
+                }
+
+                resolve(orderId);
+              });
+            }
+          );
         });
       });
     });
@@ -53,15 +64,10 @@ let model = {
           return;
         }
 
-        connection.query("DELETE FROM orders WHERE id = ?", orderId, (err, result) => {
-          if (err) {
-            connection.rollback(() => {
-              reject(err);
-            });
-            return;
-          }
-
-          connection.query("DELETE FROM products WHERE order_id = ?", orderId, (err) => {
+        connection.query(
+          "DELETE FROM orders WHERE id = ?",
+          orderId,
+          (err, result) => {
             if (err) {
               connection.rollback(() => {
                 reject(err);
@@ -69,21 +75,89 @@ let model = {
               return;
             }
 
-            connection.commit((err) => {
-              if (err) {
-                connection.rollback(() => {
-                  reject(err);
-                });
-                return;
-              }
+            connection.query(
+              "DELETE FROM products WHERE order_id = ?",
+              orderId,
+              (err) => {
+                if (err) {
+                  connection.rollback(() => {
+                    reject(err);
+                  });
+                  return;
+                }
 
-              resolve();
-            });
-          });
-        });
+                connection.commit((err) => {
+                  if (err) {
+                    connection.rollback(() => {
+                      reject(err);
+                    });
+                    return;
+                  }
+
+                  resolve();
+                });
+              }
+            );
+          }
+        );
       });
     });
-  }
+  },
+  getAllOrders: () => {
+    return new Promise((resolve, reject) => {
+      const query = "SELECT * FROM orders";
+      db.query(query, (error, orders) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        // Now fetch products for each order
+        const ordersWithProducts = orders.map(async (order) => {
+          const products = await OrderModel.getProductsByOrderId(order.id);
+          return { ...order, products };
+        });
+        Promise.all(ordersWithProducts)
+          .then((result) => resolve(result))
+          .catch((err) => reject(err));
+      });
+    });
+  },
+  getProductsByOrderId: (orderId) => {
+    return new Promise((resolve, reject) => {
+      const query = "SELECT * FROM products WHERE order_id = ?";
+      db.query(query, [orderId], (error, products) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(products);
+      });
+    });
+  },
+  updateOrder: (orderId, updatedOrder) => {
+    return new Promise((resolve, reject) => {
+      const query = "UPDATE orders SET ... WHERE id = ?"; // Update the query based on your database schema
+      db.query(query, [updatedOrder, orderId], (error, result) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(result);
+      });
+    });
+  },
+  updateOrderStatus: (orderId, newStatus) => {
+    return new Promise((resolve, reject) => {
+      const query = "UPDATE orders SET status = ? WHERE id = ?";
+      db.query(query, [newStatus, orderId], (error, result) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve({ orderId, newStatus });
+      });
+    });
+  },
 };
 
 module.exports = model;

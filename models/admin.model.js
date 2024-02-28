@@ -19,16 +19,19 @@ const model = {
         }
         const user = results[0];
         const userId = user.id;
-  
+
         // Update login_time
-        const updateLoginTimeQuery = "UPDATE admins SET login_time = CURRENT_TIMESTAMP WHERE id = ?";
+        const updateLoginTimeQuery =
+          "UPDATE admins SET login_time = CURRENT_TIMESTAMP WHERE id = ?";
         db.query(updateLoginTimeQuery, [userId], (error) => {
           if (error) {
             reject(error);
             return;
           }
           // Generate JWT token
-          const token = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
+          const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
+            expiresIn: "1h",
+          });
           // Save the token to the database
           const updateTokenQuery = "UPDATE admins SET token = ? WHERE id = ?";
           db.query(updateTokenQuery, [token, userId], (error) => {
@@ -45,14 +48,14 @@ const model = {
   },
   getUserById: (userId) => {
     return new Promise((resolve, reject) => {
-      const query = 'SELECT * FROM admins WHERE id = ?';
+      const query = "SELECT * FROM admins WHERE id = ?";
       db.query(query, [userId], (error, results) => {
         if (error) {
           reject(error);
           return;
         }
         if (results.length === 0) {
-          reject({ message: 'User not found' });
+          reject({ message: "User not found" });
           return;
         }
         resolve(results[0]);
@@ -71,7 +74,19 @@ const model = {
         resolve();
       });
     });
-  }
+  },
+  getAllUsers: () => {
+    return new Promise((resolve, reject) => {
+      const query = "SELECT * FROM admins";
+      db.query(query, (error, results) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(results);
+      });
+    });
+  },
 };
 
 module.exports = model;

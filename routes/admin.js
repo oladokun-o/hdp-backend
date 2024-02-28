@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const AdminModel = require("../models/admin.model");
+const ProductsModel = require("../models/products.model");
 const verifyToken = require("../middlewares/verifyToken");
 const bcrypt = require("bcrypt");
 const authMiddleware = require('../middlewares/auth');
@@ -73,6 +74,54 @@ router.post("/logout", async (req, res) => {
   } catch (error) {
     console.error("Logout error:", error);
     res.status(500).json({ message: "Failed to logout", error: error.message });
+  }
+});
+
+router.get("/getusers", async (req, res) => {
+  try {
+    const users = await AdminModel.getAllUsers();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/orders", async (req, res) => {
+  try {
+    const orders = await ProductsModel.getAllOrders();
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.delete("/orders/:orderId", async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+
+    // Delete associated products first
+    await ProductsModel.deleteOrder(orderId);
+
+    res
+      .status(200)
+      .json({ message: "Order and associated products deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting order and associated products:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.put("/orders/:orderId/status", async (req, res) => {
+  const orderId = req.params.orderId;
+  const newStatus = req.body.status;
+
+  try {
+    const updatedOrder = await ProductsModel.updateOrderStatus(orderId, newStatus);
+    res.status(200).json(updatedOrder);
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
