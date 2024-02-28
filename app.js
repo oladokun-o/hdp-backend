@@ -1,5 +1,6 @@
 const createError = require('http-errors');
 const express = require('express');
+require('dotenv').config();
 const cors = require("cors");
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -8,6 +9,7 @@ const logger = require('morgan');
 const db = './config/db.js';
 // var passport = require('passport');
 
+
 const app = express();
 app.use(cors());
 // db
@@ -15,8 +17,8 @@ require(db);
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
-const adminRouter = require('./routes/auth');
-// const postsRouter = require('./routes/posts');
+const authRouter = require('./routes/auth');
+const adminRouter = require('./routes/admin');
 
 
 // view engine setup
@@ -32,7 +34,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api', indexRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/auth', authRouter);
-// app.use('/posts', passport.authenticate('jwt', { session: false }), postsRouter);
+app.use('/api/admin', adminRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
