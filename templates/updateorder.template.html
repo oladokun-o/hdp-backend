@@ -778,7 +778,7 @@
                                             text-align: start;
                                             font-size: 14px;
                                           ">
-                                        NAME
+                                        QTY
                                       </td>
                                       <td style="
                                             padding: 15px;
@@ -788,7 +788,17 @@
                                             text-align: start;
                                             font-size: 14px;
                                           ">
-                                        EMAIL
+                                        PRODUCTS
+                                      </td>
+                                      <td style="
+                                            padding: 15px;
+                                            margin: 0;
+                                            font-family: manrope, arial,
+                                              sans-serif;
+                                            text-align: start;
+                                            font-size: 14px;
+                                          ">
+                                        TOTAL
                                       </td>
                                       <td style="
                                             padding: 15px;
@@ -808,27 +818,7 @@
                                             text-align: start;
                                             font-size: 14px;
                                           ">
-                                        PHONE
-                                      </td>
-                                      <td style="
-                                            padding: 15px;
-                                            margin: 0;
-                                            font-family: manrope, arial,
-                                              sans-serif;
-                                            text-align: start;
-                                            font-size: 14px;
-                                          ">
-                                        DATE
-                                      </td>
-                                      <td style="
-                                            padding: 15px;
-                                            margin: 0;
-                                            font-family: manrope, arial,
-                                              sans-serif;
-                                            text-align: start;
-                                            font-size: 14px;
-                                          ">
-                                        TOTAL
+                                        DATE ORDERED
                                       </td>
                                       <td style="
                                             padding: 15px;
@@ -850,7 +840,7 @@
                                               sans-serif;
                                             font-size: 12px;
                                           ">
-                                        {{name}}
+                                        {{quantity}}
                                       </td>
                                       <td style="
                                             padding: 15px;
@@ -860,17 +850,18 @@
                                               sans-serif;
                                             font-size: 12px;
                                           ">
-                                        <a target="_blank" href="mailto:{{email}}" style="
-                                              -webkit-text-size-adjust: none;
-                                              -ms-text-size-adjust: none;
-                                              mso-line-height-rule: exactly;
-                                              text-decoration: underline;
-                                              color: #000;
-                                              font-size: 12px;
-                                              text-align: start;
-                                              font-family: manrope, arial,
-                                                sans-serif;
-                                            ">{{email}}</a>
+                                        {{products}}
+                                      </td>
+                                      <td style="
+                                            padding: 15px;
+                                            margin: 0;
+                                            text-align: start;
+                                            font-family: manrope, arial,
+                                              sans-serif;
+                                            font-size: 12px;
+                                            white-space: nowrap;
+                                          " id="amount">
+                                        {{total_price}}
                                       </td>
                                       <td style="
                                             padding: 15px;
@@ -889,31 +880,8 @@
                                             font-family: manrope, arial,
                                               sans-serif;
                                             font-size: 12px;
-                                          ">
-                                        <a href="tel:{{phone}}">{{phone}}</a>
-                                      </td>
-                                      <td style="
-                                            padding: 15px;
-                                            margin: 0;
-                                            text-align: start;
-                                            font-family: manrope, arial,
-                                              sans-serif;
-                                            font-size: 12px;
                                           " id="timeStamp">
                                         {{order_date}}
-                                      </td>
-                                      <td style="
-                                            padding: 15px;
-                                            margin: 0;
-                                            text-align: start;
-                                            font-family: manrope, arial,
-                                              sans-serif;
-                                            font-size: 12px;
-                                            white-space: nowrap;
-                                          "
-                                          id="amount"
-                                          >
-                                        {{total_price}}
                                       </td>
                                       <td style="
                                             padding: 15px;

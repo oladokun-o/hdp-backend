@@ -125,18 +125,22 @@ const model = {
   getOrderById: (orderId) => {
     return new Promise((resolve, reject) => {
       const query = "SELECT * FROM orders WHERE order_id = ?";
-      db.query(query, [orderId], async (error, order) => {
+      db.query(query, [orderId], async (error, orderRows) => {
         if (error) {
-          reject(error);
+          reject(error); // Reject the promise with the error
           return;
         }
 
-        const products = await model.getProductsByOrderId(orderId);
-        const orderWithProducts = { ...order, products: products };
+        // Extract the order details from the first row of the result
+        const order = orderRows[0];
 
-        Promise.all([orderWithProducts])
-          .then((result) => resolve(result))
-          .catch((err) => reject(err));
+        try {
+          const products = await model.getProductsByOrderId(orderId);
+          const orderWithProducts = { ...order, products: products };
+          resolve(orderWithProducts); // Resolve the promise with the order data
+        } catch (error) {
+          reject(error); // Reject the promise if there's an error fetching products
+        }
       });
     });
   },

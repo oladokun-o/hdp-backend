@@ -7,6 +7,7 @@ const verifyToken = require("../middlewares/verifyToken");
 const authMiddleware = require('../middlewares/auth');
 const adminController = require('../controllers/admin.controller');
 const { readEmailTemplate, sendEmail } = require('../templates/mailsender');
+const { templateUtils } = require("../utils/template");
 
 router.post("/login", async function (req, res, next) {
   try {
@@ -140,14 +141,52 @@ router.put("/orders/:orderId/status", async (req, res) => {
   const newStatus = req.body.status;
 
   try {
+    // Update order status
     const updatedOrder = await ProductsModel.updateOrderStatus(orderId, newStatus);
+
+    // Get updated order details
     const order = await ProductsModel.getOrderById(orderId);
-    console.log(updatedOrder, order);
-    res.status(200).json({ ...updatedOrder, message: "Order status updated successfully!" });
+    console.error('error', order);
+
+    // Prepare email replacements
+    const replacements = {
+      name: order.customer_name,
+      from: `"Billing Team" <billing@heavydutypub.com>`,
+      address: order.address,
+      order_date: templateUtils.formatTimestamp(order.order_date),
+      quantity: order.quantity,
+      total_price: templateUtils.formatAmount(order.total_price),
+      status: order.status,
+      products: order.products.map(p => `${p.name} ${p.qty} x ${templateUtils.formatAmount(p.price)}`).join('\n'),
+      reply: "Your order has been updated"
+    };
+
+    // Read email template and send emails
+    readEmailTemplate("updateorder.template.html", replacements)
+      .then(async data => {
+        // send to user's email
+        const userMail = await sendEmail(order.email, replacements.from, "Your Order has been updated", data.html);
+
+        // Check if email to user was sent successfully
+        if (userMail) {
+          // Respond with success
+          res.status(200).json({ ...updatedOrder, message: "Order updated successfully" });
+        } else {
+          // Respond with partial success or failure
+          res.status(500).json({ message: "Error sending email to user" });
+        }
+      })
+      .catch(error => {
+        console.error('Error reading email template or sending email to user:', error);
+        // Respond with failure
+        res.status(500).json({ message: "Error processing order update" });
+      });
   } catch (error) {
     console.error("Error updating order status:", error);
-    res.status(500).json({ message: "Internal server error" });
+    // Respond with failure
+    res.status(500).json({ message: "Error updating order status", error: error });
   }
 });
+
 
 module.exports = router;
