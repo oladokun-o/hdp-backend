@@ -51,7 +51,6 @@ router.post("/login", async function (req, res, next) {
   }
 });
 
-
 router.post("/logout", async (req, res) => {
   try {
     // Call the logout function from the model

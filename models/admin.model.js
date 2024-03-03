@@ -92,24 +92,43 @@ const model = {
       // Extract username, email, and password from the userData object
       const { username, email, password } = userData;
 
-      // Query to insert a new user into the database
-      const query = "INSERT INTO admins (username, email, password) VALUES (?, ?, ?)";
+      // Query to check if the user already exists
+      const checkUserQuery = "SELECT * FROM admins WHERE email = ?";
       
-      // Values to be inserted into the query
-      const values = [username, email, password];
-
-      // Execute the query to insert the new user
-      db.query(query, values, (error, results) => {
+      // Execute the query to check if the user already exists
+      db.query(checkUserQuery, [email], (error, results) => {
         if (error) {
           reject(error);
           return;
         }
+
+        // Check if a user with the provided email already exists
+        if (results.length > 0) {
+          reject({ message: 'User with this email already exists' });
+          return;
+        }
         
-        // Retrieve the newly created user from the database
-        const userId = results.insertId;
-        model.getUserById(userId)
-          .then(newUser => resolve(newUser))
-          .catch(error => reject(error));
+        // If the user does not exist, proceed to create the new user
+
+        // Query to insert a new user into the database
+        const insertUserQuery = "INSERT INTO admins (username, email, password) VALUES (?, ?, ?)";
+        
+        // Values to be inserted into the query
+        const values = [username, email, password];
+
+        // Execute the query to insert the new user
+        db.query(insertUserQuery, values, (error, results) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          
+          // Retrieve the newly created user from the database
+          const userId = results.insertId;
+          model.getUserById(userId)
+            .then(newUser => resolve(newUser))
+            .catch(error => reject(error));
+        });
       });
     });
   },
