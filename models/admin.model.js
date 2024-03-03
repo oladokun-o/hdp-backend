@@ -34,13 +34,13 @@ const model = {
           });
           // Save the token to the database
           const updateTokenQuery = "UPDATE admins SET token = ? WHERE id = ?";
-          db.query(updateTokenQuery, [token, userId], (error) => {
+          db.query(updateTokenQuery, [token, userId], (error, gotuser) => {
             if (error) {
               reject(error);
               return;
             }
             // Resolve with the user data
-            resolve(user);
+            resolve({ ...user, token: user.token ? user.token : token});
           });
         });
       });

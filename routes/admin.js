@@ -6,6 +6,7 @@ const verifyToken = require("../middlewares/verifyToken");
 // const bcrypt = require("bcrypt");
 const authMiddleware = require('../middlewares/auth');
 const adminController = require('../controllers/admin.controller');
+const { readEmailTemplate, sendEmail } = require('../templates/mailsender');
 
 router.post("/login", async function (req, res, next) {
   try {
@@ -24,9 +25,9 @@ router.post("/login", async function (req, res, next) {
       if (password !== user.password) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
-    } 
+    }
     // else {
-      // Compare hashed passwords for non-superadmin users
+    // Compare hashed passwords for non-superadmin users
     //   bcrypt.compare(password, user.password, (err, passwordMatch) => {
     //     if (err) {
     //       return res.status(500).json({ message: "Internal server error" });
@@ -62,11 +63,11 @@ router.post("/logout", async (req, res) => {
   }
 });
 
-router.use(authMiddleware.authenticateToken);
-
 router.get("/protected", verifyToken, function (req, res) {
   res.status(200).json({ message: "Protected route accessed successfully", user: req.user });
 });
+
+router.use(authMiddleware.authenticateToken);
 
 router.get('/getuser/:id', async (req, res) => {
   try {
@@ -78,7 +79,6 @@ router.get('/getuser/:id', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch user by ID' });
   }
 });
-
 
 router.get("/getusers", async (req, res) => {
   try {
@@ -112,12 +112,23 @@ router.delete("/orders/:orderId", async (req, res) => {
   try {
     const orderId = req.params.orderId;
 
-    // Delete associated products first
-    await ProductsModel.deleteOrder(orderId);
+    const deletedOrderInfo = await ProductsModel.getOrderById(orderId);
 
-    res
-      .status(200)
-      .json({ message: "Order and associated products deleted successfully" });
+    // Delete associated products first
+    let productsDeleted = await ProductsModel.deleteOrder(orderId);
+
+    if (productsDeleted) {
+      const replacements = {
+        from: `"System HDP" <noreply@heavydutypub.com>`,
+        subject: 'An order with id: ' + orderId + ' was deleted'
+      };
+
+      await sendEmail("ceo@heavydutypub.com", replacements.from, replacements.subject, `An order with id: ${orderId} was deleted.\n\nOrder Details:\n${JSON.stringify(deletedOrderInfo, null, 2)}`);
+
+      res
+        .status(200)
+        .json({ message: "Order and associated products deleted successfully" });
+    }
   } catch (error) {
     console.error("Error deleting order and associated products:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -130,6 +141,8 @@ router.put("/orders/:orderId/status", async (req, res) => {
 
   try {
     const updatedOrder = await ProductsModel.updateOrderStatus(orderId, newStatus);
+    const order = await ProductsModel.getOrderById(orderId);
+    console.log(updatedOrder, order);
     res.status(200).json({ ...updatedOrder, message: "Order status updated successfully!" });
   } catch (error) {
     console.error("Error updating order status:", error);

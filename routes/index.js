@@ -4,6 +4,7 @@ const productsModel = require("../models/products.model");
 const defaultEmail = "billing@heavydutypub.com";
 const EmailTransporter = require("../config/smtp");
 const { readEmailTemplate, sendEmail } = require('../templates/mailsender');
+const { templateUtils } = require("../utils/template");
 
 // Send email function
 const sendOrderEmail = async (to, subject, html) => {
@@ -55,32 +56,40 @@ router.post("/orders/new", async function (req, res, next) {
   // Define SendMails as an async function
   async function SendMails(orderId) {
     try {
-      // Send order confirmation email to customer
-      const customerEmailSubject = "Order Confirmation";
-      const customerEmailHTML = `<p>Dear ${order.customer_name},</p>
-          <p>Your order has been received successfully.</p>
-          <p>Order Details:</p>
-          <ul>
-              ${products.map(product => `<li>${product.name}: ${product.qty}</li>`).join("")}
-          </ul>
-          <p>Total Price: ${order.total_price}</p>
-          <p>Thank you for shopping with us.</p>`;
-      const customerEmailSent = await sendOrderEmail(order.email, customerEmailSubject, customerEmailHTML);
+      const filename = "order.template.html",
+        replacements = {
+          name: order.customer_name,
+          from: `"Billing Team" <billing@heavydutypub.com>`,
+          address: req.body.address,
+          email: req.body.email,
+          order_date: templateUtils.formatTimestamp(req.body.order_date),
+          phone: req.body.phone,
+          quantity: req.body.quantity,
+          total_price: templateUtils.formatAmount(req.body.total_price),
+          status: req.body.status,
+          reply: ""
+        };
 
-      // Send order notification email to billing admin
-      const adminEmailSubject = "New Order Notification";
-      const adminEmailHTML = `<p>Hello Admin,</p>
-          <p>A new order has been received. Please check the dashboard for more details.</p>`;
-      const adminEmailSent = await sendOrderEmail(defaultEmail, adminEmailSubject, adminEmailHTML);
+      readEmailTemplate(filename, replacements)
+        .then(async data => {
+          // send to billing email
+          const billingTeamEmail = await sendEmail("billing@heavydutypub.com", replacements.from, "New Order Notification", data.html);
 
-      // Check if emails were sent successfully
-      if (customerEmailSent && adminEmailSent) {
-        res.status(200).json({ message: "Order placed successfully", status: 200 });
-      } else {
-        // If emails fail to send, delete the order
-        deleteOrderAndProducts(orderId); // Assuming there's an order ID available
-        res.status(500).json({ message: "Failed to send order confirmation emails" });
-      }
+          // send to user's email
+          const userMail = await sendEmail(replacements.email, replacements.from, "Order Confirmation", data.html);
+
+          // Check if emails were sent successfully
+          if (billingTeamEmail && userMail) {
+            res.status(200).json({ message: "Order placed successfully", status: 200 });
+          } else {
+            // If emails fail to send, delete the order
+            deleteOrderAndProducts(orderId); // Assuming there's an order ID available
+            res.status(500).json({ message: "Failed to send order confirmation emails" });
+          }
+        })
+        .catch(error => {
+          console.error('Error reading email template:', error);
+        });
     } catch (error) {
       // If any error occurs while sending emails, delete the order
       deleteOrderAndProducts(orderId); // Assuming there's an order ID available
@@ -146,7 +155,6 @@ router.get("/orders/:id", async function (req, res, next) {
 });
 
 // contact form
-// Create order
 router.post("/contact", async function (req, res, next) {
   try {
     const filename = "default.template.html",
@@ -162,16 +170,16 @@ router.post("/contact", async function (req, res, next) {
     readEmailTemplate(filename, replacements)
       .then(async data => {
         // send to contact email
-        const contactMail = await sendEmail("contact@heavydutypub.com", replacements.from, "New message", data.html);
+        const contactMail = await sendEmail("support@heavydutypub.com", replacements.from, "New message", data.html);
         if (contactMail) {
-          console.log("Email sent successfully to contact@heavydutypub.com");
+          console.log("Email sent successfully to support@heavydutypub.com");
           res.status(200).json({ message: 'Message sent successfully', status: 200 });
 
           // send to user's email
           const userMail = await sendEmail(replacements.email, replacements.from, "We'll get in touch", data.html);
           if (userMail) console.log("Email sent successfully to " + replacements.email);
         }
-        else console.error("Couldn't send email to contact@heavydutypub.com", contactMail.error);
+        else console.error("Couldn't send email to support@heavydutypub.com", contactMail.error);
       })
       .catch(error => {
         console.error('Error reading email template:', error);

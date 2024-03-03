@@ -94,7 +94,7 @@ const model = {
                     return;
                   }
 
-                  resolve();
+                  resolve(true);
                 });
               }
             );
@@ -117,6 +117,24 @@ const model = {
           return { ...order, products };
         });
         Promise.all(ordersWithProducts)
+          .then((result) => resolve(result))
+          .catch((err) => reject(err));
+      });
+    });
+  },
+  getOrderById: (orderId) => {
+    return new Promise((resolve, reject) => {
+      const query = "SELECT * FROM orders WHERE order_id = ?";
+      db.query(query, [orderId], async (error, order) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        const products = await model.getProductsByOrderId(orderId);
+        const orderWithProducts = { ...order, products: products };
+
+        Promise.all([orderWithProducts])
           .then((result) => resolve(result))
           .catch((err) => reject(err));
       });
